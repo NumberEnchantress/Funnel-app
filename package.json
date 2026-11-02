@@ -1,0 +1,13 @@
+{
+  "name": "funnel-android",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Funnel: YouTube one thing at a time, on Android (the One Thing At A Time engine in an app).",
+  "scripts": {
+    "bundle": "node tools/bundle.js",
+    "test": "node --test tests/"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

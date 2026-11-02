@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace = 'com.otaat.funnel'
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = 'com.otaat.funnel'
+        minSdk = 30
+        targetSdk = 36
+        versionCode = 1
+        versionName = '0.1.0'
+    }
+
+    buildFeatures {
+        buildConfig = true
+        resValues = true
+    }
+
+    buildTypes {
+        debug {
+            // A separate app on the phone, so test builds never share data or a log folder with the real one.
+            applicationIdSuffix = '.debug'
+            versionNameSuffix = '-debug'
+            resValue 'string', 'app_name', 'Funnel (test)'
+        }
+        release {
+            minifyEnabled = false
+            resValue 'string', 'app_name', 'Funnel'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Document-start scripts, origin-restricted message channels and the local page loader.
+    implementation 'androidx.webkit:webkit:1.14.0'
+}

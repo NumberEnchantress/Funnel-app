@@ -1,0 +1,10 @@
+/*
+ * App-only hiding rules, added after the extension's hide.css.
+ *
+ * Shorts: after Next, YouTube's phone site sometimes runs a short smooth scroll that shows a strip of the
+ * following Short. Only the active Short (aria-hidden="false") stays visible. The rule applies only while
+ * some Short is marked active, so a change on YouTube's side can't leave the screen blank.
+ */
+html[otaat-surface="shorts"][otaat-mode="native"] shorts-carousel:has(.ytShortsCarouselCarouselItem[aria-hidden="false"]) .ytShortsCarouselCarouselItem[aria-hidden="true"] {
+  visibility: hidden !important;
+}

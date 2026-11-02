@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings · Funnel</title>
+  <link rel="icon" href="../icons/icon.svg">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    label.opt { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; cursor: pointer; }
+    label.opt input { margin-top: 3px; }
+    label.opt small { display: block; color: var(--muted); }
+    .field { display: flex; flex-direction: column; gap: 4px; padding: 6px 0; }
+    .field input[type="text"] { width: 100%; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+    #fileStatus { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--chip); }
+    #fileStatus.warn { outline: 2px solid var(--warn); }
+    .site-head { display: flex; align-items: center; justify-content: space-between; }
+    .saved { font-size: 12px; color: var(--ok); opacity: 0; transition: opacity .2s; }
+    .saved.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="top">
+      <div class="brand"><img src="../icons/icon.svg" alt=""><h1>Settings</h1></div>
+      <span class="saved" id="saved">Saved</span>
+      <span class="spacer"></span>
+      <nav class="pages"><a href="logs.html">Logs</a><a href="later.html">Later</a><a class="here" href="options.html">Settings</a></nav>
+    </div>
+
+    <div class="panel" id="files">
+      <h2>Log files</h2>
+      <p class="muted small" style="margin-top:-4px">Each day gets a folder (inside a folder for its month, e.g. <code>2026-10/2026-10-14</code>) with
+        <code>seen.<span class="dev">phone</span>.md</code>, <code>skipped.<span class="dev">phone</span>.md</code>,
+        <code>deferred.<span class="dev">phone</span>.md</code>, <code>queued.<span class="dev">phone</span>.md</code>
+        and <code>events.<span class="dev">phone</span>.jsonl</code>. It is the same format as the Firefox extension, with the
+        device name in the file names, so the phone's files and the computer's can share one folder without clashing.</p>
+      <div id="fileStatus" class="small">Checking…</div>
+      <div class="row">
+        <button id="choose" class="primary">Choose folder…</button>
+        <button id="sync">Write pending entries now</button>
+        <button id="rebuild" title="Write the full history kept in the app to the files again. Lines already in the files are not written twice.">Write full history again</button>
+      </div>
+      <div class="cols" style="margin-top:10px">
+        <div class="field"><span>Device name in file names <small class="muted">letters, digits and dashes</small></span>
+          <input type="text" id="device" spellcheck="false" maxlength="24">
+        </div>
+      </div>
+      <label class="opt"><input type="checkbox" id="importOthers"><span>Skip items sorted on other devices
+        <small>reads the other devices' <code>events.jsonl</code> files in this folder (for example the Firefox extension's,
+          synced to the phone), so anything you already sorted there doesn't come up here</small></span></label>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <div class="site-head"><h2>YouTube</h2><label><input type="checkbox" data-path="paused.youtube"> Paused</label></div>
+        <p class="muted small">Shown one at a time:</p>
+        <label class="opt"><input type="checkbox" data-path="surfaces.youtube.home"><span>Home</span></label>
+        <label class="opt"><input type="checkbox" data-path="surfaces.youtube.subscriptions"><span>Subscriptions feed</span></label>
+        <label class="opt"><input type="checkbox" data-path="surfaces.youtube.shorts"><span>Shorts player <small>adds the buttons; Shorts are already one at a time</small></span></label>
+        <label class="opt"><input type="checkbox" data-path="surfaces.youtube.channel"><span>Channel video tabs <small>a channel's own uploads (off by default: profile feeds)</small></span></label>
+        <p class="muted small">Hide:</p>
+        <label class="opt"><input type="checkbox" data-path="hide.ytRelated"><span>Recommended videos on the watch page</span></label>
+        <label class="opt"><input type="checkbox" data-path="hide.ytEndscreen"><span>End-of-video suggestions</span></label>
+        <label class="opt"><input type="checkbox" data-path="hide.ytSearchShelves"><span>Shelves injected into search results <small>Shorts, "For you", "People also watched"</small></span></label>
+        <label class="opt"><input type="checkbox" data-path="hide.ytAutoplay"><span>Keep autoplay off <small>the next recommended video doesn't start by itself; Up next and playlists still play</small></span></label>
+        <label class="opt"><input type="checkbox" data-path="hide.ads"><span>Hide ads and promoted items <small>in feeds and on pages (not the ads inside videos)</small></span></label>
+      </div>
+
+      <div class="panel">
+        <h2>Sorting</h2>
+        <label class="opt"><input type="checkbox" data-path="skipSorted"><span>Never show an item again once sorted <small>anything you pressed Next, Later or Queue on stays out of your feeds</small></span></label>
+        <label class="opt"><input type="checkbox" data-path="queueAdvances"><span>Queue also moves on to the next item</span></label>
+        <h2 style="margin-top:14px">Logging</h2>
+        <label class="opt"><input type="checkbox" data-path="logSightings"><span>Log items I scroll past on normal pages <small>search results, channel pages, playlists</small></span></label>
+        <div class="field"><span>Counts as seen when this much of it is on screen</span>
+          <select data-path="sightingThreshold" data-type="number">
+            <option value="0.25">A quarter</option><option value="0.5">Half</option><option value="0.75">Three quarters</option><option value="1">All of it</option>
+          </select>
+        </div>
+        <div class="field"><span>Log the same item as seen again after (hours, 0 = every time)</span>
+          <input type="number" min="0" max="8760" step="1" data-path="seenRepeatHours" data-type="number">
+        </div>
+        <p class="muted small">Next, Later and Queue are always logged, every time.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Data</h2>
+      <p class="small" id="totals"></p>
+      <div class="row">
+        <button id="resetSorted" title="Items you already sorted can show up in feeds again. Logs are not touched.">Let sorted items show up again</button>
+      </div>
+    </div>
+  </div>
+  <script src="../android/pages-shim.js"></script>
+  <script src="../shared/settings.js"></script>
+  <script src="common.js"></script>
+  <script src="../android/pages-after.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
