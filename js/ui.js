@@ -26,9 +26,12 @@
       browser.post({ type: 'ui.toast', text: String(text), kind: String(kind), ms: Number(ms) || 2800 });
     },
 
-    // The bar is outside the page: the page's whole viewport is free.
+    // The app's bar is outside the page; inside it, YouTube's own tab bar covers the bottom edge. The engine
+    // keeps items clear of it and centres the one item in the space above it (--otaat-stage).
     reservedBottom() {
-      return 16;
+      const nav = document.querySelector('ytm-pivot-bar-renderer');
+      const r = nav && nav.offsetParent !== null ? nav.getBoundingClientRect() : null;
+      return r && r.height ? Math.max(16, Math.round(window.innerHeight - r.top + 8)) : 16;
     },
     reservedTop() {
       return 0;

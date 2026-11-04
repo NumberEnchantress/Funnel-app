@@ -18,21 +18,6 @@ ytm-button-renderer:has(> a[href^="intent:"]) {
   display: none !important;
 }
 
-/*
- * Home and Subscriptions show one video: it sits in the middle of the space between YouTube's header
- * and its tab bar (measured by youtube-app.js into --otaat-feed-space), instead of at the top of an
- * otherwise empty screen.
- */
-html[otaat-q="home"] ytm-rich-grid-renderer .rich-grid-renderer-contents[otaat-fit],
-html[otaat-q="subscriptions"] ytm-rich-grid-renderer .rich-grid-renderer-contents[otaat-fit] {
-  min-height: var(--otaat-feed-space) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  box-sizing: border-box !important;
-  padding-bottom: 4vh !important; /* a little above the exact middle, where the eye expects it */
-}
-
 /* Watch pages: the video's description fills the space the hidden recommendations leave. */
 .otaat-description {
   margin: 8px 16px 16px;

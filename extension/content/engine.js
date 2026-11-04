@@ -287,6 +287,7 @@
     keepMarks();
     if (isNew && x.info.key !== state.lastShownKey) state.shownCount++;
     state.lastShownKey = x.info.key;
+    fitStage();
     reveal(x.el);
     logSeen(x.info, state.surface.name);
     topUp();
@@ -539,6 +540,21 @@
     }
     return Math.min(bottom, window.innerHeight / 2);
   }
+
+  /**
+   * The space between the top of the feed and the button bar, given to the feed's CSS as --otaat-stage so
+   * the one item on show can sit in the middle of it instead of at the top of an empty page. Only when the
+   * feed starts high on the page (Home): under a tall header (a channel page) the item stays where it is.
+   */
+  function fitStage() {
+    const root = state.root;
+    if (!root || state.surface.mode !== 'collapse') return;
+    const top = root.getBoundingClientRect().top + window.scrollY;
+    const space = Math.round(window.innerHeight - O.ui.reservedBottom() - top - 8);
+    if (top < window.innerHeight * 0.4 && space > 0) root.style.setProperty('--otaat-stage', `${space}px`);
+    else root.style.removeProperty('--otaat-stage');
+  }
+  const scheduleFitStage = U.throttle(fitStage, 200);
 
   function reveal(el) {
     const rect = el.getBoundingClientRect();
@@ -1037,6 +1053,7 @@
         if (retired.size) checkRetired(); // e.g. the site re-used the old feed's elements in place
       }, 300);
       window.addEventListener('popstate', onUrlMaybeChanged);
+      window.addEventListener('resize', scheduleFitStage, { passive: true });
       document.addEventListener('yt-navigate-finish', onUrlMaybeChanged);
     });
 

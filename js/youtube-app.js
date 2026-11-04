@@ -63,30 +63,6 @@
 
   // ---------------------------------------------------------------- no empty screens (see js/app.css)
 
-  // Home / Subscriptions: the one video is centred in the space between YouTube's header and its tab bar.
-  // The space is measured, not guessed, because the header's height changes (topic chips, banners).
-  function fitFeed() {
-    const q = document.documentElement.getAttribute('otaat-q');
-    const feed = q === 'home' || q === 'subscriptions';
-    for (const el of document.querySelectorAll('.rich-grid-renderer-contents[otaat-fit]')) {
-      if (!feed || el.offsetParent === null) el.removeAttribute('otaat-fit');
-    }
-    if (!feed) return;
-    const box = [...document.querySelectorAll('ytm-rich-grid-renderer .rich-grid-renderer-contents')].find((el) => el.offsetParent !== null);
-    if (!box) return;
-    const nav = document.querySelector('ytm-pivot-bar-renderer');
-    const navHeight = nav && nav.offsetParent !== null ? nav.getBoundingClientRect().height : 0;
-    const top = box.getBoundingClientRect().top + window.scrollY;
-    const space = Math.floor(window.innerHeight - top - navHeight);
-    if (space < 240) {
-      box.removeAttribute('otaat-fit'); // not enough room to be worth it (e.g. a big banner on top)
-      return;
-    }
-    const value = `${space}px`;
-    if (box.style.getPropertyValue('--otaat-feed-space') !== value) box.style.setProperty('--otaat-feed-space', value);
-    if (!box.hasAttribute('otaat-fit')) box.setAttribute('otaat-fit', '');
-  }
-
   // Watch pages: with the recommendations hidden, the video's own description fills the space under it.
   const URL_RE = /https?:\/\/[^\s<>"]+[^\s<>".,;:!?)\]'"]/g;
 
@@ -145,9 +121,6 @@
   }
 
   setInterval(() => {
-    if (document.hidden) return;
-    fitFeed();
-    describe();
+    if (!document.hidden) describe();
   }, 500);
-  window.addEventListener('resize', fitFeed);
 })();
