@@ -253,3 +253,11 @@ test('a slow answer to Next is waited for, never reported as failed (which would
   assert.ok(!app.toasts.some((t) => /Could not write/.test(t)));
   assert.equal(app.logged.filter((e) => e.action === 'skipped').length, 1);
 });
+
+test('every script the app ships parses (a broken page script fails silently on the phone)', () => {
+  const assets = path.join(ANDROID, 'app', 'src', 'main', 'assets');
+  const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? walk(path.join(dir, d.name)) : [path.join(dir, d.name)]));
+  const scripts = walk(assets).filter((f) => f.endsWith('.js'));
+  assert.ok(scripts.length >= 8);
+  for (const f of scripts) execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' });
+});

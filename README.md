@@ -87,6 +87,9 @@ doesn't come up on the phone.
   developer.
 - **Ads inside videos are not removed.** Ads in feeds and under videos are hidden (as in the extension);
   removing video ads would mean tampering with YouTube's player, which YouTube actively fights.
+- **No gaps where things were hidden.** On Home and Subscriptions the one video is a large card in the
+  middle of the screen; under a video, its description takes the place of the recommendations; YouTube's
+  "Open App" button (which would only try to open the YouTube app) is gone.
 - **Autoplay.** When a video ends, YouTube isn't told, so it can't start a recommendation. Playlists you
   open yourself still play through; Up next plays if it has anything.
 - **Background play and picture-in-picture are not supported yet.** Like the free YouTube app, a video

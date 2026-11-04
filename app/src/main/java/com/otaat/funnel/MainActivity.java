@@ -30,7 +30,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.window.OnBackInvokedDispatcher;
@@ -149,9 +148,11 @@ public class MainActivity extends Activity implements Bridge.Host {
         t.setText(text);
         t.setTextSize(14);
         t.setTextColor(l == null ? muted() : fg());
-        t.setGravity(Gravity.CENTER_VERTICAL);
-        t.setPadding(dp(12), 0, dp(12), 0);
+        t.setGravity(l == null ? Gravity.CENTER_VERTICAL | Gravity.START : Gravity.CENTER);
+        t.setPadding(dp(6), 0, dp(6), 0);
         t.setMinHeight(dp(40));
+        t.setSingleLine(true);
+        t.setEllipsize(android.text.TextUtils.TruncateAt.END);
         if (l != null) {
             TypedValue tv = new TypedValue();
             getTheme().resolveAttribute(android.R.attr.selectableItemBackground, tv, true);
@@ -159,6 +160,10 @@ public class MainActivity extends Activity implements Bridge.Host {
             t.setOnClickListener(l);
         }
         return t;
+    }
+
+    private static LinearLayout.LayoutParams weighted(float weight) {
+        return new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, weight);
     }
 
     private void buildUi() {
@@ -211,25 +216,24 @@ public class MainActivity extends Activity implements Bridge.Host {
         buttons.addView(queue, lp);
         bar.addView(buttons);
 
-        // Always there, one tap each: today's count, Logs, Watch later, Later list, Settings.
-        HorizontalScrollView scroll = new HorizontalScrollView(this);
-        scroll.setHorizontalScrollBarEnabled(false);
+        // Always there, one tap each: today's count, Logs, Watch later, Later list, Settings. The row always
+        // fills the width exactly: the links share it evenly, and the count / status (on feeds) or the
+        // "choose a folder" reminder takes the space left on the left. Nothing scrolls or gets cut off.
         LinearLayout links = new LinearLayout(this);
         links.setOrientation(LinearLayout.HORIZONTAL);
         folderChip = chip("⚠ Choose log folder", v -> chooseFolder());
         folderChip.setTextColor(Color.rgb(230, 140, 0));
-        links.addView(folderChip);
+        links.addView(folderChip, weighted(1.6f));
         countChip = chip("", null);
-        countChip.setMaxWidth(dp(260));
-        countChip.setSingleLine(true);
-        countChip.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        links.addView(countChip);
-        links.addView(chip("Logs", v -> openPage("logs", "")));
-        links.addView(chip("Watch later", v -> web.loadUrl(Urls.WATCH_LATER)));
-        links.addView(chip("Later list", v -> openPage("later", "")));
-        links.addView(chip("Settings", v -> openPage("options", "")));
-        scroll.addView(links);
-        bar.addView(scroll);
+        links.addView(countChip, weighted(1.6f));
+        links.addView(chip("Logs", v -> openPage("logs", "")), weighted(0.8f));
+        links.addView(chip("Watch later", v -> web.loadUrl(Urls.WATCH_LATER)), weighted(1.2f));
+        links.addView(chip("Later list", v -> openPage("later", "")), weighted(1.1f));
+        TextView settings = chip("⚙︎", v -> openPage("options", ""));
+        settings.setTextSize(18);
+        settings.setContentDescription("Settings");
+        links.addView(settings, weighted(0.5f));
+        bar.addView(links, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         setContentView(root);
         getWindow().setDecorFitsSystemWindows(false);
@@ -486,12 +490,15 @@ public class MainActivity extends Activity implements Bridge.Host {
     }
 
     private void refreshChips() {
-        String count = uiState.optString("countText", "");
-        String st = uiState.optBoolean("visible") ? uiState.optString("status", "") : "";
-        String text = st.isEmpty() ? count : count.isEmpty() ? st : st + " · " + count;
+        // Shown on feeds only (elsewhere the links get the whole row). "40 sorted today" → "40 today".
+        boolean feed = uiState.optBoolean("visible");
+        String count = uiState.optString("countText", "").replace(" sorted today", " today");
+        String st = feed ? uiState.optString("status", "") : "";
+        String text = !feed ? "" : st.isEmpty() ? count : count.isEmpty() ? st : st + " · " + count;
         countChip.setText(text);
-        countChip.setVisibility(text.isEmpty() ? View.GONE : View.VISIBLE);
-        folderChip.setVisibility(app.folder() == null ? View.VISIBLE : View.GONE);
+        boolean needFolder = app.folder() == null;
+        folderChip.setVisibility(needFolder ? View.VISIBLE : View.GONE);
+        countChip.setVisibility(!needFolder && !text.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     @Override

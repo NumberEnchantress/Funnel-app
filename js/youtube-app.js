@@ -60,4 +60,94 @@
       guard.clicks++;
     }
   }, 1500);
+
+  // ---------------------------------------------------------------- no empty screens (see js/app.css)
+
+  // Home / Subscriptions: the one video is centred in the space between YouTube's header and its tab bar.
+  // The space is measured, not guessed, because the header's height changes (topic chips, banners).
+  function fitFeed() {
+    const q = document.documentElement.getAttribute('otaat-q');
+    const feed = q === 'home' || q === 'subscriptions';
+    for (const el of document.querySelectorAll('.rich-grid-renderer-contents[otaat-fit]')) {
+      if (!feed || el.offsetParent === null) el.removeAttribute('otaat-fit');
+    }
+    if (!feed) return;
+    const box = [...document.querySelectorAll('ytm-rich-grid-renderer .rich-grid-renderer-contents')].find((el) => el.offsetParent !== null);
+    if (!box) return;
+    const nav = document.querySelector('ytm-pivot-bar-renderer');
+    const navHeight = nav && nav.offsetParent !== null ? nav.getBoundingClientRect().height : 0;
+    const top = box.getBoundingClientRect().top + window.scrollY;
+    const space = Math.floor(window.innerHeight - top - navHeight);
+    if (space < 240) {
+      box.removeAttribute('otaat-fit'); // not enough room to be worth it (e.g. a big banner on top)
+      return;
+    }
+    const value = `${space}px`;
+    if (box.style.getPropertyValue('--otaat-feed-space') !== value) box.style.setProperty('--otaat-feed-space', value);
+    if (!box.hasAttribute('otaat-fit')) box.setAttribute('otaat-fit', '');
+  }
+
+  // Watch pages: with the recommendations hidden, the video's own description fills the space under it.
+  const URL_RE = /https?:\/\/[^\s<>"]+[^\s<>".,;:!?)\]'"]/g;
+
+  function cardColors() {
+    // The same look as YouTube's own comments card on this page (light or dark theme).
+    const card = document.querySelector('yt-video-metadata-carousel-view-model, ytm-comments-entry-point-header-renderer');
+    const meta = document.querySelector('yt-video-metadata-view-model, ytm-slim-video-metadata-section-renderer');
+    const text = meta ? getComputedStyle(meta).color : '';
+    let back = card ? getComputedStyle(card).backgroundColor : '';
+    if (!back || back === 'rgba(0, 0, 0, 0)') {
+      const dark = /rgb\((\d+)/.exec(text || '') && Number(/rgb\((\d+)/.exec(text)[1]) > 128;
+      back = dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+    }
+    return { text, back };
+  }
+
+  function describe() {
+    const old = document.querySelector('.otaat-description');
+    const host = isWatch() && O.settings.hide.ytRelated && document.querySelector('ytm-single-column-watch-next-results-renderer');
+    if (!host) {
+      if (old) old.remove();
+      return;
+    }
+    const video = new URLSearchParams(location.search).get('v') || '';
+    if (old && old.dataset.video === video && host.contains(old)) return;
+    let text = '';
+    try {
+      const details = document.querySelector('#movie_player').getPlayerResponse().videoDetails;
+      if (details && details.videoId === video) text = String(details.shortDescription || '');
+    } catch (_) {
+      /* the player isn't ready yet: try again on the next tick */
+    }
+    if (old) old.remove();
+    if (!text.trim()) return;
+    const card = document.createElement('div');
+    card.className = 'otaat-description';
+    card.dataset.video = video;
+    const { text: color, back } = cardColors();
+    card.style.color = color;
+    card.style.background = back;
+    const title = document.createElement('h3');
+    title.textContent = 'Description';
+    card.append(title);
+    // Plain text, with its links made clickable (they open like any link: YouTube here, others in the browser).
+    let last = 0;
+    for (const m of text.matchAll(URL_RE)) {
+      card.append(document.createTextNode(text.slice(last, m.index)));
+      const a = document.createElement('a');
+      a.href = m[0];
+      a.textContent = m[0];
+      card.append(a);
+      last = m.index + m[0].length;
+    }
+    card.append(document.createTextNode(text.slice(last)));
+    host.append(card);
+  }
+
+  setInterval(() => {
+    if (document.hidden) return;
+    fitFeed();
+    describe();
+  }, 500);
+  window.addEventListener('resize', fitFeed);
 })();

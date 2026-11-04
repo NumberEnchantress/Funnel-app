@@ -8,3 +8,86 @@
 html[otaat-surface="shorts"][otaat-mode="native"] shorts-carousel:has(.ytShortsCarouselCarouselItem[aria-hidden="false"]) .ytShortsCarouselCarouselItem[aria-hidden="true"] {
   visibility: hidden !important;
 }
+
+/*
+ * YouTube's "Open App" button asks to open the YouTube app, which this app replaces (and the link is
+ * refused). It is hidden only in that form; signing in stays in the You tab.
+ */
+.mobile-topbar-header-sign-in-button:has(a[href^="intent:"]),
+ytm-button-renderer:has(> a[href^="intent:"]) {
+  display: none !important;
+}
+
+/*
+ * Home and Subscriptions show one video: it sits in the middle of the space between YouTube's header
+ * and its tab bar (measured by youtube-app.js into --otaat-feed-space), instead of at the top of an
+ * otherwise empty screen.
+ */
+html[otaat-q="home"] ytm-rich-grid-renderer .rich-grid-renderer-contents[otaat-fit],
+html[otaat-q="subscriptions"] ytm-rich-grid-renderer .rich-grid-renderer-contents[otaat-fit] {
+  min-height: var(--otaat-feed-space) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  padding-bottom: 4vh !important; /* a little above the exact middle, where the eye expects it */
+}
+
+/* Watch pages: the video's description fills the space the hidden recommendations leave. */
+.otaat-description {
+  margin: 8px 16px 16px;
+  padding: 12px;
+  border-radius: 12px;
+  font: 14px/20px Roboto, Arial, sans-serif;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.otaat-description h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.otaat-description a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* The one video as a featured card: inset with rounded corners and larger text, so it holds the screen. */
+html:is([otaat-q="home"], [otaat-q="subscriptions"]) ytm-rich-item-renderer[otaat-current] {
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+}
+html:is([otaat-q="home"], [otaat-q="subscriptions"]) ytm-rich-item-renderer[otaat-current] :is(yt-thumbnail-view-model, .media-item-thumbnail-container, ytm-thumbnail-cover) {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+html:is([otaat-q="home"], [otaat-q="subscriptions"]) ytm-rich-item-renderer[otaat-current] :is(h3, h3 *) {
+  font-size: 20px !important;
+  line-height: 26px !important;
+}
+html:is([otaat-q="home"], [otaat-q="subscriptions"]) ytm-rich-item-renderer[otaat-current] :is(yt-content-metadata-view-model, ytm-badge-and-byline-renderer) :is(span, div) {
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+/* Titles: room for three lines at the larger size (YouTube caps them at two lines of its own size). */
+html:is([otaat-q="home"], [otaat-q="subscriptions"]) ytm-rich-item-renderer[otaat-current] h3 * {
+  max-height: none !important;
+  -webkit-line-clamp: 3 !important;
+}
+/* A video from a shelf ("Breaking news", …) gets the full width too, not its narrow place in the row. */
+html:is([otaat-q="home"], [otaat-q="subscriptions"]) .rich-shelf-content[otaat-has-current] {
+  overflow: visible !important;
+  justify-content: center !important;
+}
+html:is([otaat-q="home"], [otaat-q="subscriptions"]) .rich-shelf-content > ytm-rich-item-renderer[otaat-current] {
+  width: 100% !important;
+  max-width: none !important;
+  flex: 1 1 100% !important;
+  margin: 0 !important;
+}
+/* Shorts are tall: centred, at a width that still fits the screen. */
+html:is([otaat-q="home"], [otaat-q="subscriptions"]) ytm-rich-item-renderer[otaat-current]:has(ytm-shorts-lockup-view-model, ytm-shorts-lockup-view-model-v2, ytm-reel-item-renderer) {
+  width: min(62vw, 300px) !important;
+  flex: 0 0 auto !important;
+  margin: 0 auto !important;
+}
