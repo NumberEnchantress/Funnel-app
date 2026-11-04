@@ -395,6 +395,7 @@
     const shown = !!anchor;
     if (!anchor) anchor = base.keys().next().value; // nothing on show: the first item is just a landmark
     box.setAttribute('otaat-retired', state.surface.mode);
+    box.setAttribute('otaat-from', state.surface.name); // which feed it was (for its CSS while it is still up)
     retired.set(box, {
       since: Date.now(),
       page: pageOf(state.url), // (still the address of the page being left)
@@ -448,6 +449,7 @@
   function unretire(box) {
     retired.delete(box);
     box.removeAttribute('otaat-retired');
+    box.removeAttribute('otaat-from');
     clearMarksIn(box);
     watchRetired();
     applyFlags();

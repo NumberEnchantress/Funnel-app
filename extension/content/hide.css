@@ -163,6 +163,60 @@ ytm-rich-grid-renderer[otaat-retired] ytm-rich-item-renderer[otaat-current] {
 html[otaat-q][otaat-site="youtube"]:not([otaat-loadmore]) ytm-rich-grid-renderer ytm-continuation-item-renderer {
   display: none !important;
 }
+/*
+ * Home and Subscriptions on the phone site: the one video as a featured card, inset with rounded corners and
+ * larger text, so it holds the screen. (Also while the feed is retired, so it doesn't snap back meanwhile.)
+ */
+:is(html:is([otaat-q="home"], [otaat-q="subscriptions"]), [otaat-retired]:is([otaat-from="home"], [otaat-from="subscriptions"])) ytm-rich-item-renderer[otaat-current] {
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+}
+:is(html:is([otaat-q="home"], [otaat-q="subscriptions"]), [otaat-retired]:is([otaat-from="home"], [otaat-from="subscriptions"])) ytm-rich-item-renderer[otaat-current] :is(yt-thumbnail-view-model, .media-item-thumbnail-container, ytm-thumbnail-cover) {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+:is(html:is([otaat-q="home"], [otaat-q="subscriptions"]), [otaat-retired]:is([otaat-from="home"], [otaat-from="subscriptions"])) ytm-rich-item-renderer[otaat-current] :is(h3, h3 *) {
+  font-size: 20px !important;
+  line-height: 26px !important;
+}
+:is(html:is([otaat-q="home"], [otaat-q="subscriptions"]), [otaat-retired]:is([otaat-from="home"], [otaat-from="subscriptions"])) ytm-rich-item-renderer[otaat-current] :is(yt-content-metadata-view-model, ytm-badge-and-byline-renderer) :is(span, div) {
+  font-size: 14px !important;
+  line-height: 20px !important;
+}
+/* Titles: room for three lines at the larger size (YouTube caps them at two lines of its own size). */
+:is(html:is([otaat-q="home"], [otaat-q="subscriptions"]), [otaat-retired]:is([otaat-from="home"], [otaat-from="subscriptions"])) ytm-rich-item-renderer[otaat-current] h3 * {
+  max-height: none !important;
+  -webkit-line-clamp: 3 !important;
+}
+/* A video from a shelf ("Breaking news", …) gets the full width too, not its narrow place in the row
+   (YouTube puts an inline width on shelf items, hence !important). */
+:is(html:is([otaat-q="home"], [otaat-q="subscriptions"]), [otaat-retired]:is([otaat-from="home"], [otaat-from="subscriptions"])) .rich-shelf-content[otaat-has-current] {
+  overflow: visible !important;
+  justify-content: center !important;
+}
+:is(html:is([otaat-q="home"], [otaat-q="subscriptions"]), [otaat-retired]:is([otaat-from="home"], [otaat-from="subscriptions"])) .rich-shelf-content > ytm-rich-item-renderer[otaat-current] {
+  width: 100% !important;
+  max-width: none !important;
+  flex: 1 1 100% !important;
+  margin: 0 !important;
+}
+/* Shorts are tall: centred, at a width that still fits the screen. */
+:is(html:is([otaat-q="home"], [otaat-q="subscriptions"]), [otaat-retired]:is([otaat-from="home"], [otaat-from="subscriptions"])) ytm-rich-item-renderer[otaat-current]:has(ytm-shorts-lockup-view-model, ytm-shorts-lockup-view-model-v2, ytm-reel-item-renderer) {
+  width: min(62vw, 300px) !important;
+  flex: 0 0 auto !important;
+  margin: 0 auto !important;
+}
+
+/* Shorts player: only the active Short is visible (a smooth scroll after Next would show a strip of the next). */
+html[otaat-surface="shorts"][otaat-mode="native"] shorts-carousel:has(.ytShortsCarouselCarouselItem[aria-hidden="false"]) .ytShortsCarouselCarouselItem[aria-hidden="true"] {
+  visibility: hidden !important;
+}
+
+/* The phone site's "Open App" header button (a link into the YouTube app). */
+html[otaat-site="youtube"] :is(.mobile-topbar-header-sign-in-button:has(a[href^="intent:"]), ytm-button-renderer:has(> a[href^="intent:"])) {
+  display: none !important;
+}
+
 html[otaat-hide-yt-related] :is(ytm-watch, ytm-single-column-watch-next-results-renderer) .related-items-container {
   display: none !important;
 }
