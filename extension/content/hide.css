@@ -108,6 +108,11 @@ html[otaat-q][otaat-site="youtube"] ytd-rich-item-renderer[otaat-current] {
 html[otaat-q][otaat-site="youtube"] ytd-rich-item-renderer[otaat-current]:has(ytm-shorts-lockup-view-model, ytm-shorts-lockup-view-model-v2) {
   width: var(--otaat-short-card) !important;
 }
+/* Room below the one item as tall as the bar (--otaat-clear), so it can always be scrolled clear of it. */
+html[otaat-q][otaat-mode="collapse"] :is(ytd-rich-grid-renderer, ytm-rich-grid-renderer, shreddit-feed),
+:is(ytd-rich-grid-renderer, ytm-rich-grid-renderer, shreddit-feed)[otaat-retired] {
+  padding-bottom: var(--otaat-clear, 0px) !important;
+}
 /* The one item sits in the middle of the free space (--otaat-stage, set only where the feed starts high up). */
 html[otaat-q][otaat-site="youtube"] ytd-rich-grid-renderer > #contents,
 ytd-rich-grid-renderer[otaat-retired] > #contents {

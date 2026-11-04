@@ -30,8 +30,10 @@
     // keeps items clear of it and centres the one item in the space above it (--otaat-stage).
     reservedBottom() {
       const nav = document.querySelector('ytm-pivot-bar-renderer');
-      const r = nav && nav.offsetParent !== null ? nav.getBoundingClientRect() : null;
-      return r && r.height ? Math.max(16, Math.round(window.innerHeight - r.top + 8)) : 16;
+      // (Fixed-position, so offsetParent is always null: whether it is shown comes from its box.)
+      const r = nav ? nav.getBoundingClientRect() : null;
+      const shown = r && r.height > 0 && r.top < window.innerHeight && getComputedStyle(nav).visibility !== 'hidden';
+      return shown ? Math.max(16, Math.round(window.innerHeight - r.top + 8)) : 16;
     },
     reservedTop() {
       return 0;

@@ -288,7 +288,7 @@
     if (isNew && x.info.key !== state.lastShownKey) state.shownCount++;
     state.lastShownKey = x.info.key;
     fitStage();
-    reveal(x.el);
+    keepInView(x.el, reveal(x.el));
     logSeen(x.info, state.surface.name);
     topUp();
     updateBar();
@@ -550,7 +550,10 @@
     const root = state.root;
     if (!root || state.surface.mode !== 'collapse') return;
     const top = root.getBoundingClientRect().top + window.scrollY;
-    const space = Math.round(window.innerHeight - O.ui.reservedBottom() - top - 8);
+    const reserved = O.ui.reservedBottom();
+    // Room below the feed as tall as the bar, so the item can always be scrolled clear of it.
+    root.style.setProperty('--otaat-clear', `${reserved}px`);
+    const space = Math.round(window.innerHeight - reserved - top - 8);
     if (top < window.innerHeight * 0.4 && space > 0) root.style.setProperty('--otaat-stage', `${space}px`);
     else root.style.removeProperty('--otaat-stage');
   }
@@ -568,7 +571,45 @@
       const delta =
         state.surface.mode !== 'spotlight' && fits && rect.top >= offset ? rect.bottom - bottomLimit : rect.top - offset;
       window.scrollTo({ top: Math.max(0, window.scrollY + delta), behavior: 'instant' });
+      return delta !== 0;
     }
+    return false;
+  }
+
+  /**
+   * The page often keeps moving for a moment after an item is shown (a channel header's pictures load and
+   * push the feed down), which could leave the item under the bar or the site's bottom tabs. Keep it in view
+   * while the page settles: for a few seconds, and only until the user scrolls themself.
+   */
+  const SETTLE_MS = 3000;
+  let settling = null;
+  function keepInView(el, justScrolled) {
+    if (settling) settling();
+    if (state.surface.mode !== 'collapse' || typeof ResizeObserver === 'undefined') return;
+    let ours = justScrolled; // that scroll's event is still to come
+    const onScroll = () => {
+      if (ours) ours = false;
+      else stop(); // the user scrolled: leave the page where they put it
+    };
+    let stopped = false;
+    const ro = new ResizeObserver(() => {
+      if (stopped) return;
+      if (state.current !== el || !el.isConnected) return stop();
+      fitStage();
+      if (reveal(el)) ours = true;
+    });
+    const timer = setTimeout(() => stop(), SETTLE_MS);
+    function stop() {
+      stopped = true;
+      ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      clearTimeout(timer);
+      if (settling === stop) settling = null;
+    }
+    settling = stop;
+    ro.observe(document.body);
+    ro.observe(el);
+    window.addEventListener('scroll', onScroll, { passive: true });
   }
 
   // ---------------------------------------------------------------- loading more
@@ -1033,6 +1074,7 @@
     clearInterval(urlTimer);
     clearTimeout(seenTimer);
     clearTimeout(leaveTimer);
+    if (settling) settling();
   }
 
   function start() {
