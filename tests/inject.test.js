@@ -267,9 +267,14 @@ test("YouTube's own autoplay setting is switched off before its player starts (P
   const { window } = page({
     url: 'https://m.youtube.com/watch?v=NiCgcUTL9_Q',
     body: '<div id="movie_player"><video></video></div>',
-    beforeEval: (w) => (w.document.cookie = 'PREF=tz=Etc.UTC&f5=20000&f6=40000000; domain=.youtube.com; path=/'),
+    beforeEval: (w) => {
+      // Another cookie first, as on the real site (a lookup that only finds PREF in first place would miss it).
+      w.document.cookie = 'VISITOR_INFO1_LIVE=abc; domain=.youtube.com; path=/';
+      w.document.cookie = 'PREF=tz=Etc.UTC&f5=20000&f6=40000000; domain=.youtube.com; path=/';
+    },
   });
   await sleep(0);
+  assert.equal(window.document.cookie.split('; ').filter((c) => c.startsWith('PREF=')).length, 1, 'one PREF cookie');
   const pref = /PREF=([^;]*)/.exec(window.document.cookie)[1].split('&');
   assert.ok(pref.includes('f5=30000'), pref.join('&'));
   assert.ok(!pref.includes('f5=20000'));

@@ -936,6 +936,22 @@ const browser = (() => {
     );
   }
 
+  /**
+   * The phone site keeps its autoplay switch in the PREF cookie (f5=30000 off, f5=20000 on), so it can be set
+   * off at the source there, where the switch itself is only on screen after the player controls have shown.
+   * Only while "Keep autoplay off" is on; the other PREF settings are kept. Desktop YouTube ignores f5 for
+   * autoplay (it keeps the choice per tab), so there the switch-flipping guard does the job.
+   */
+  function autoplayOffInPrefs() {
+    const m = document.cookie.match(/(?:^|;\s*)PREF=([^;]*)/);
+    const parts = (m ? m[1] : '').split('&').filter((p) => p && !p.startsWith('f5='));
+    parts.push('f5=30000');
+    const value = parts.join('&');
+    if (m && m[1] === value) return;
+    // Same domain and path as YouTube's own PREF, so it replaces it instead of adding a second one.
+    document.cookie = `PREF=${value}; domain=.youtube.com; path=/; max-age=${2 * 365 * 24 * 3600}; secure; samesite=lax`;
+  }
+
   O.adapters.youtube = {
     site: 'youtube',
     matches: (host) => /(^|\.)youtube\.com$/.test(host),
@@ -1116,6 +1132,7 @@ const browser = (() => {
     },
 
     onPage(surf, settings) {
+      if (settings.hide.ytAutoplay && isMobile()) autoplayOffInPrefs();
       call('autoplayGuard', { on: surf.name === 'watch' && !!settings.hide.ytAutoplay });
     },
   };
@@ -1163,23 +1180,8 @@ const browser = (() => {
     true
   );
 
-  // Autoplay off at the source: YouTube keeps the choice in its PREF cookie (f5=30000 = off, f5=20000 = on),
-  // and the player reads it when it starts. This script runs before any of YouTube's, so on every page load
-  // the setting is already off when the player looks — even when its switch is never on screen. (Turn
-  // "Keep autoplay off" off in the app's Settings to leave YouTube's own choice alone.)
-  function autoplayOffInPrefs() {
-    if (!document) return; // the page is already gone
-    const m = document.cookie.match(/(?:^|;\s*)PREF=([^;]*)/);
-    const parts = (m ? m[1] : '').split('&').filter((p) => p && !p.startsWith('f5='));
-    parts.push('f5=30000');
-    const value = parts.join('&');
-    if (m && m[1] === value) return;
-    // Same domain and path as YouTube's own PREF cookie, so this replaces it rather than adding a second one.
-    document.cookie = `PREF=${value}; domain=.youtube.com; path=/; max-age=${2 * 365 * 24 * 3600}; secure; samesite=lax`;
-  }
-  O.settingsReady.then((s) => {
-    if (s.hide.ytAutoplay) autoplayOffInPrefs();
-  });
+  // Autoplay off at the source (YouTube's PREF cookie, f5=30000) is done by the extension's adapter
+  // (content/sites/youtube.js autoplayOffInPrefs, since 1.1.5) as each page is set up.
 
   // YouTube's switch itself is turned off by the extension's own guard (yt-main.js guardTick, since 1.1.5):
   // at most twice per video and never during an ad, so it never fights you.
