@@ -90,8 +90,11 @@ doesn't come up on the phone.
 - **No gaps where things were hidden.** On Home and Subscriptions the one video is a large card in the
   middle of the screen; under a video, its description takes the place of the recommendations; YouTube's
   "Open App" button (which would only try to open the YouTube app) is gone.
-- **Autoplay.** When a video ends, YouTube isn't told, so it can't start a recommendation. Playlists you
-  open yourself still play through; Up next plays if it has anything.
+- **Autoplay.** Three layers: YouTube's own autoplay setting is switched off on every page load (in its
+  `PREF` cookie, before its player reads it), its autoplay switch is turned off if it ever shows as on, and
+  when a video ends YouTube isn't told, so it can't start a recommendation. Playlists you open yourself
+  still play through; Up next plays if it has anything. Turning off *Keep autoplay off* in Settings leaves
+  YouTube's own choice alone.
 - **Background play and picture-in-picture are not supported yet.** Like the free YouTube app, a video
   stops when you leave the app.
 - **YouTube's terms of service.** The app shows YouTube's own site and hides parts of it, as the browser

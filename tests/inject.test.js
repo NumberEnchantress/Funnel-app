@@ -86,7 +86,7 @@ process.on('unhandledRejection', (e) => {
 });
 
 const pages = [];
-function page({ url = 'https://m.youtube.com/', body = fs.readFileSync(path.join(FIXTURES, 'm-youtube-grid.html'), 'utf8'), settings = null, sorted, withPort = true } = {}) {
+function page({ url = 'https://m.youtube.com/', body = fs.readFileSync(path.join(FIXTURES, 'm-youtube-grid.html'), 'utf8'), settings = null, sorted, withPort = true, beforeEval } = {}) {
   const dom = new JSDOM(`<!doctype html><html><head></head><body>${body}</body></html>`, {
     url,
     runScripts: 'outside-only',
@@ -98,6 +98,7 @@ function page({ url = 'https://m.youtube.com/', body = fs.readFileSync(path.join
   window.scrollTo = () => {};
   window.document.elementsFromPoint = () => [];
   window.__otaatTestHook = (O) => (window.__engine = O);
+  if (beforeEval) beforeEval(window);
   window.IntersectionObserver = class {
     observe() {}
     unobserve() {}
@@ -260,4 +261,28 @@ test('every script the app ships parses (a broken page script fails silently on 
   const scripts = walk(assets).filter((f) => f.endsWith('.js'));
   assert.ok(scripts.length >= 8);
   for (const f of scripts) execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' });
+});
+
+test("YouTube's own autoplay setting is switched off before its player starts (PREF f5=30000), keeping its other preferences", async () => {
+  const { window } = page({
+    url: 'https://m.youtube.com/watch?v=NiCgcUTL9_Q',
+    body: '<div id="movie_player"><video></video></div>',
+    beforeEval: (w) => (w.document.cookie = 'PREF=tz=Etc.UTC&f5=20000&f6=40000000; domain=.youtube.com; path=/'),
+  });
+  await sleep(0);
+  const pref = /PREF=([^;]*)/.exec(window.document.cookie)[1].split('&');
+  assert.ok(pref.includes('f5=30000'), pref.join('&'));
+  assert.ok(!pref.includes('f5=20000'));
+  assert.ok(pref.includes('tz=Etc.UTC') && pref.includes('f6=40000000'));
+});
+
+test('with "Keep autoplay off" turned off, YouTube\'s own autoplay choice is left alone', async () => {
+  const { window } = page({
+    url: 'https://m.youtube.com/watch?v=NiCgcUTL9_Q',
+    body: '<div id="movie_player"><video></video></div>',
+    settings: { hide: { ytAutoplay: false } },
+    beforeEval: (w) => (w.document.cookie = 'PREF=f5=20000; domain=.youtube.com; path=/'),
+  });
+  await sleep(0);
+  assert.match(window.document.cookie, /PREF=f5=20000/);
 });

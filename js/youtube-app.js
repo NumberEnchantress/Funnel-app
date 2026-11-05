@@ -39,6 +39,24 @@
     true
   );
 
+  // Autoplay off at the source: YouTube keeps the choice in its PREF cookie (f5=30000 = off, f5=20000 = on),
+  // and the player reads it when it starts. This script runs before any of YouTube's, so on every page load
+  // the setting is already off when the player looks — even when its switch is never on screen. (Turn
+  // "Keep autoplay off" off in the app's Settings to leave YouTube's own choice alone.)
+  function autoplayOffInPrefs() {
+    if (!document) return; // the page is already gone
+    const m = document.cookie.match(/(?:^|;\s*)PREF=([^;]*)/);
+    const parts = (m ? m[1] : '').split('&').filter((p) => p && !p.startsWith('f5='));
+    parts.push('f5=30000');
+    const value = parts.join('&');
+    if (m && m[1] === value) return;
+    // Same domain and path as YouTube's own PREF cookie, so this replaces it rather than adding a second one.
+    document.cookie = `PREF=${value}; domain=.youtube.com; path=/; max-age=${2 * 365 * 24 * 3600}; secure; samesite=lax`;
+  }
+  O.settingsReady.then((s) => {
+    if (s.hide.ytAutoplay) autoplayOffInPrefs();
+  });
+
   // Backup: switch YouTube's own autoplay toggle off on watch pages. At most twice per video, never during
   // an ad, so it never fights you if you turn it back on.
   const guard = { video: '', clicks: 0 };
