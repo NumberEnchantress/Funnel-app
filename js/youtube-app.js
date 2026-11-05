@@ -57,27 +57,8 @@
     if (s.hide.ytAutoplay) autoplayOffInPrefs();
   });
 
-  // Backup: switch YouTube's own autoplay toggle off on watch pages. At most twice per video, never during
-  // an ad, so it never fights you if you turn it back on.
-  const guard = { video: '', clicks: 0 };
-  setInterval(() => {
-    if (!isWatch() || !O.settings.hide.ytAutoplay || document.hidden) return;
-    if (adPlaying()) return;
-    // m.youtube.com (2026): <button class="ytwAutonavToggleButtonHost" aria-pressed="true" aria-label="Autoplay is on">
-    const btn = document.querySelector(
-      'button[class*="AutonavToggleButton"][aria-pressed="true"], button.ytm-autonav-toggle-button-container[aria-pressed="true"], .ytp-autonav-toggle-button[aria-checked="true"]'
-    );
-    if (!btn) return;
-    const video = new URLSearchParams(location.search).get('v') || '';
-    if (video !== guard.video) {
-      guard.video = video;
-      guard.clicks = 0;
-    }
-    if (guard.clicks < 2) {
-      (btn.closest('button') || btn).click();
-      guard.clicks++;
-    }
-  }, 1500);
+  // YouTube's switch itself is turned off by the extension's own guard (yt-main.js guardTick, since 1.1.5):
+  // at most twice per video and never during an ad, so it never fights you.
 
   // ---------------------------------------------------------------- no empty screens (see js/app.css)
 
